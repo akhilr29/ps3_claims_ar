@@ -16,6 +16,7 @@ from sklearn.preprocessing import OneHotEncoder, SplineTransformer, StandardScal
 from ps3.data._load_transform import load_transform
 from ps3.data._sample_split import create_sample_split
 from ps3.data.plots import plot_weighted_avg_claims
+from ps3.evaluation._evaluate_predictions import evaluate_predictions
 
 # %%
 # load data
@@ -459,3 +460,34 @@ plt.show()
 # The widening train–test gap and the flat test curve after about 100 iterations shows
 # diminishing returns in the number of trees.
 #  A simpler model with fewer trees or more regularisation would do about as well
+
+# %%
+# Compare the unconstrained and the constrained LGBM on the test set.
+# `evaluate_predictions` computes bias, deviance, RMSE, MAE and Gini for one model's
+# predictions (weighted by exposure) and returns a data frame with one row per
+# metric. The two results are put side by side, one column per model.
+# - "pp_t_lgbm" holds the predictions of the tuned LGBM without a constraint
+#   (from the GridSearchCV).
+# - "pp_t_lgbm_constrained" holds the predictions of the LGBM with the increasing
+#   constraint on BonusMalus (tuned with Optuna).
+metrics_lgbm = pd.concat(
+    [
+        evaluate_predictions(
+            df_test,
+            "PurePremium",
+            "pp_t_lgbm",
+            "Exposure",
+            model_name="LGBM (unconstrained)",
+        ),
+        evaluate_predictions(
+            df_test,
+            "PurePremium",
+            "pp_t_lgbm_constrained",
+            "Exposure",
+            model_name="LGBM (constrained)",
+        ),
+    ],
+    axis=1,
+)
+metrics_lgbm
+## The constrained model has much lower bias while delivering a similar deviance, rmse and Gini index.
