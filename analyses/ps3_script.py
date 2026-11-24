@@ -514,3 +514,48 @@ profile_cat = explainer.model_profile(variable_type="categorical")
 profile_cat.plot()
 
 # %%
+# Exercise 5
+# Explainer objects for the initial GLM and the constrained LGBM, both on the test set.
+
+# The initial GLM is re-fitted into its own object, with the same settings and
+# training data as before. The spline pipeline above uses the object `t_glm1` as its
+# last step and re-fits it in place on the 62 spline and one-hot features, so `t_glm1`
+# is no longer the initial GLM and would fail on X_test_t.
+t_glm_1 = GeneralizedLinearRegressor(family=TweedieDist, l1_ratio=1, fit_intercept=True)
+t_glm_1.fit(X_train_t, y_train_t, sample_weight=w_train_t)
+
+# Explainer for the initial GLM (fitted on X_train_t, so explained on X_test_t)
+explainer_glm = dalex.Explainer(
+    t_glm_1,
+    X_test_t,
+    y_test_t,
+    weights=w_test_t,  # exposure weights
+    label="GLM (initial)",
+)
+
+# Explainer for the constrained LGBM (the same model as `explainer` in exercise 4)
+explainer_constrained_lgbm = dalex.Explainer(
+    constrained_lgbm,
+    X_test_t,
+    y_test_t,
+    weights=w_test_t,  # exposure weights
+    label="LGBM (constrained)",
+)
+
+# %%
+# Explain the prediction for a single policy with `predict_parts` and SHAP values.
+# The data point is the first policy of the test set, given as a one-row data frame
+# with the same columns as the models were fitted on. For both models we use
+# type="shap": the contribution of each feature to the prediction is averaged over
+# B random orderings of the features (B=25 by default). N=1000 samples that many
+# rows of the test data as the background for the calculation, to save time, and
+# random_state makes the result reproducible.
+observation = X_test_t.iloc[[0]]
+
+shap_glm = explainer_glm.predict_parts(observation, type="shap", N=1000, random_state=0)
+shap_constrained_lgbm = explainer_constrained_lgbm.predict_parts(
+    observation, type="shap", N=1000, random_state=0
+)
+
+# Plot the two explanations next to each other
+shap_glm.plot(shap_constrained_lgbm)
