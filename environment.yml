@@ -17,9 +17,15 @@ dependencies:
   - ydata-profiling
   # interactive
   - ipykernel
+  - nbformat  # needed to render plotly figures (e.g. dalex plots) in notebooks
   # plots
   - matplotlib
   # ml
   - glum
   - lightgbm
+  - optuna
   - scikit-learn
+  # explainability
+  - pip:
+      # >=1.8.0: older versions use ndarray.ptp(), which NumPy 2 removed
+      - dalex>=1.8.0
