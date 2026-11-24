@@ -1,4 +1,5 @@
 # %%
+import dalex
 import lightgbm as lgb
 import matplotlib.pyplot as plt
 import numpy as np
@@ -462,6 +463,7 @@ plt.show()
 #  A simpler model with fewer trees or more regularisation would do about as well
 
 # %%
+# Exercise 3
 # Compare the unconstrained and the constrained LGBM on the test set.
 # `evaluate_predictions` computes bias, deviance, RMSE, MAE and Gini for one model's
 # predictions (weighted by exposure) and returns a data frame with one row per
@@ -491,3 +493,24 @@ metrics_lgbm = pd.concat(
 )
 metrics_lgbm
 ## The constrained model has much lower bias while delivering a similar deviance, rmse and Gini index.
+
+# %%
+# Exercise 4
+# Explainer object for the constrained LGBM.
+explainer = dalex.Explainer(
+    constrained_lgbm,  # the fitted model (the pipeline works)
+    X_test_t,
+    y_test_t,
+    weights=w_test_t,  # exposure weights
+    label="LGBM (constrained)",
+)
+# %%
+# Numerical features (BonusMalus, Density)
+profile_num = explainer.model_profile()
+profile_num.plot()
+
+# Categorical features (VehBrand, VehGas, Region, Area, DrivAge, VehAge, VehPower)
+profile_cat = explainer.model_profile(variable_type="categorical")
+profile_cat.plot()
+
+# %%
