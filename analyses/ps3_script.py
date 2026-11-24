@@ -559,6 +559,3 @@ shap_constrained_lgbm = explainer_constrained_lgbm.predict_parts(
 
 # Plot the two explanations next to each other
 shap_glm.plot(shap_constrained_lgbm)
-
-
-# %%
